@@ -20,7 +20,9 @@ frameTick          = 5
 -- amount for invaders to move horizontally
 invaderXStep       = 5
 -- amount for invaders to move horizontally
-invaderYStep       = 15
+invaderYStep       = 7
+-- number of updates to descend
+descendYUpdates    = 2
 -- initial horizontal move direction for invaders
 invaderDirection   = -1
 -- total available screen length to render invaders in
@@ -37,7 +39,8 @@ yDescend = 0
 function dvd:init(xspeed, yspeed)
   dvd:createInvaders()
 
-  self.invaderRowToUpdate = 0
+  self.invaderRowToUpdate = updateRow
+  self.yDescendUpdateCounter = descendYUpdates
   self.stepTimer = playdate.frameTimer.new(frameTick, self.updateInvaders, self)
   self.stepTimer.repeats = true
 end
@@ -59,15 +62,21 @@ function dvd:updateInvaders()
   else
     dvd.updateInvaderPositions(self)
   end
-  updateRow = (updateRow + updateRowDirection) % invaderRowCount
-  yDescend = 0
+
+  if (yDescend == 1 and self.yDescendUpdateCounter > 0) then
+    self.yDescendUpdateCounter -= 1
+  elseif (self.yDescendUpdateCounter == 0) then
+    self.yDescendUpdateCounter = descendYUpdates
+    yDescend = 0
+  end
+  self.invaderRowToUpdate = (self.invaderRowToUpdate + updateRowDirection) % invaderRowCount
 end
 
 function dvd:updateInvaderPositions()
   local invaders = self.invaders
   for i, v in ipairs(invaders) do
     local currentRow = math.floor((i - 1) / invaderColCount)
-    if (currentRow == updateRow) then
+    if (currentRow == self.invaderRowToUpdate) then
       v.x += invaderXStep * invaderDirection
     end
     v.y += invaderYStep * yDescend
@@ -77,7 +86,7 @@ end
 function dvd:checkInvadersWithinBounds()
   local invaders = self.invaders
   return
-    updateRow == 3 and ((invaders[44].x + invaderXStep) >= (playdate.display.getWidth() - (invaderMargin * 5 + invaderWidth))
+  self.invaderRowToUpdate == 3 and ((invaders[44].x + invaderXStep) >= (playdate.display.getWidth() - (invaderMargin * 5 + invaderWidth))
       or (invaders[34].x - invaderXStep) <= (invaderMargin * 5))
 end
 
