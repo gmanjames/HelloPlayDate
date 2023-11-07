@@ -8,7 +8,6 @@ class("dvd").extends()
 
 -- margin between invaders
 invaderMargin      = 5
-
 -- padding on either side of initial invader load
 screenXPadding     = 64
 -- number of invaders per row
