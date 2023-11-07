@@ -6,21 +6,39 @@ local gfx <const> = playdate.graphics
 
 class("dvd").extends()
 
-invaderMargin    = 5
-screenXPadding   = 64
-invaderColCount  = 11
-invaderRowCount  = 4
-frameTick        = 7
-invaderStep      = 5
-invaderDirection = -1
-availableXRange  = playdate.display.getWidth() - screenXPadding * 2
-invaderWidth     = (availableXRange - invaderMargin * (invaderColCount - 1)) / invaderColCount
+-- margin between invaders
+invaderMargin      = 5
+
+-- padding on either side of initial invader load
+screenXPadding     = 64
+-- number of invaders per row
+invaderColCount    = 11
+-- number of invader rows
+invaderRowCount    = 4
+-- perform update every frameTick frames
+frameTick          = 5
+-- amount for invaders to move horizontally
+invaderXStep       = 5
+-- amount for invaders to move horizontally
+invaderYStep       = 15
+-- initial horizontal move direction for invaders
+invaderDirection   = -1
+-- total available screen length to render invaders in
+availableXRange    = playdate.display.getWidth() - screenXPadding * 2
+-- width of invaders
+invaderWidth       = (availableXRange - invaderMargin * (invaderColCount - 1)) / invaderColCount
+-- initial row to update
+updateRow          = 3
+-- initial direction of rows to update
+updateRowDirection = -1
+-- descend
+yDescend = 0
 
 function dvd:init(xspeed, yspeed)
   dvd:createInvaders()
 
   self.invaderRowToUpdate = 0
-  self.stepTimer = playdate.frameTimer.new(frameTick, self.update, self)
+  self.stepTimer = playdate.frameTimer.new(frameTick, self.updateInvaders, self)
   self.stepTimer.repeats = true
 end
 
@@ -33,41 +51,34 @@ function dvd:createInvaders()
   end
 end
 
-function dvd:swapColors()
-	-- if (gfx.getBackgroundColor() == gfx.kColorWhite) then
-	-- 	gfx.setBackgroundColor(gfx.kColorBlack)
-	-- 	gfx.setColor(gfx.kColorWhite)
-	-- else
-	-- 	gfx.setBackgroundColor(gfx.kColorWhite)
-	-- 	gfx.setColor(gfx.kColorBlack)
-	-- end
-end
-
-function dvd:updateState()
-  local invaders = self.invaders
-  if (
-    invaders[11].x >= (playdate.display.getWidth() - (invaderMargin * 5 + invaderWidth))
-      or invaders[1].x <= (invaderMargin * 5)
-  ) then
+function dvd:updateInvaders()
+  if (self.checkInvadersWithinBounds(self)) then
     invaderDirection = invaderDirection * -1
+    yDescend = 1
+    dvd.updateInvaderPositions(self)
+  else
+    dvd.updateInvaderPositions(self)
   end
-  print(invaderDirection)
+  updateRow = (updateRow + updateRowDirection) % invaderRowCount
+  yDescend = 0
 end
 
-function dvd:update()
+function dvd:updateInvaderPositions()
   local invaders = self.invaders
-
-  if (self.invaderRowToUpdate == 0) then
-    self.updateState(self)
-  end
-
   for i, v in ipairs(invaders) do
     local currentRow = math.floor((i - 1) / invaderColCount)
-    if (currentRow == self.invaderRowToUpdate) then
-      v.x += invaderStep * invaderDirection
+    if (currentRow == updateRow) then
+      v.x += invaderXStep * invaderDirection
     end
+    v.y += invaderYStep * yDescend
   end
-  self.invaderRowToUpdate = (self.invaderRowToUpdate + 1) % invaderRowCount
+end
+
+function dvd:checkInvadersWithinBounds()
+  local invaders = self.invaders
+  return
+    updateRow == 3 and ((invaders[44].x + invaderXStep) >= (playdate.display.getWidth() - (invaderMargin * 5 + invaderWidth))
+      or (invaders[34].x - invaderXStep) <= (invaderMargin * 5))
 end
 
 function dvd:draw()
