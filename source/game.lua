@@ -4,7 +4,7 @@ import 'CoreLibs/frameTimer'
 
 local gfx <const> = playdate.graphics
 
-class("dvd").extends()
+class("game").extends()
 
 -- margin between invaders
 invaderMargin      = 5
@@ -35,8 +35,8 @@ updateRowDirection = -1
 -- descend
 yDescend = 0
 
-function dvd:init(xspeed, yspeed)
-  dvd:createInvaders()
+function game:init()
+  game:createInvaders()
 
   self.invaderRowToUpdate = updateRow
   self.yDescendUpdateCounter = descendYUpdates
@@ -44,7 +44,7 @@ function dvd:init(xspeed, yspeed)
   self.stepTimer.repeats = true
 end
 
-function dvd:createInvaders()
+function game:createInvaders()
   self.invaders = {}
   for i=0,(invaderRowCount * invaderColCount)-1 do
     local x = screenXPadding + ((i % invaderColCount) * (invaderWidth + invaderMargin))
@@ -53,13 +53,13 @@ function dvd:createInvaders()
   end
 end
 
-function dvd:updateInvaders()
+function game:updateInvaders()
   if (self.checkInvadersWithinBounds(self)) then
     invaderDirection = invaderDirection * -1
     yDescend = 1
-    dvd.updateInvaderPositions(self)
+    game.updateInvaderPositions(self)
   else
-    dvd.updateInvaderPositions(self)
+    game.updateInvaderPositions(self)
   end
 
   if (yDescend == 1 and self.yDescendUpdateCounter > 0) then
@@ -71,7 +71,7 @@ function dvd:updateInvaders()
   self.invaderRowToUpdate = (self.invaderRowToUpdate + updateRowDirection) % invaderRowCount
 end
 
-function dvd:updateInvaderPositions()
+function game:updateInvaderPositions()
   local invaders = self.invaders
   for i, v in ipairs(invaders) do
     local currentRow = math.floor((i - 1) / invaderColCount)
@@ -82,14 +82,14 @@ function dvd:updateInvaderPositions()
   end
 end
 
-function dvd:checkInvadersWithinBounds()
+function game:checkInvadersWithinBounds()
   local invaders = self.invaders
   return
   self.invaderRowToUpdate == 3 and ((invaders[44].x + invaderXStep) >= (playdate.display.getWidth() - (invaderMargin * 5 + invaderWidth))
       or (invaders[34].x - invaderXStep) <= (invaderMargin * 5))
 end
 
-function dvd:draw()
+function game:draw()
     gfx.setColor(gfx.kColorBlack)
     for _,v in ipairs(self.invaders) do
       gfx.drawRect(v.x, v.y, v.width, v.height)
