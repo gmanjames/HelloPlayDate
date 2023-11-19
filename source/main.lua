@@ -1,7 +1,9 @@
 import "game"
+import "CoreLibs/ui"
+
 local game = game()
 
-playdate.display.setRefreshRate(20)
+playdate.display.setRefreshRate(30)
 
 local gfx <const> = playdate.graphics
 local font = gfx.font.new('fnt/Mini Sans 2X')
@@ -11,15 +13,18 @@ local function loadGame()
   gfx.setFont(font)
 end
 
-local function drawGame()
-  gfx.clear()
-  game:draw()
-end
-
 loadGame()
+
+function playdate.BButtonDown()
+	game:fireShipLaser()
+end
 
 function playdate.update()
   playdate.frameTimer.updateTimers()
-  drawGame()
-  playdate.drawFPS(0,0)
+  game:update()
+  
+
+  gfx.clear()
+  gfx.sprite.update()
+  game:draw()
 end
