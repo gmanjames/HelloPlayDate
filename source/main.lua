@@ -1,30 +1,34 @@
 import "game"
 import "CoreLibs/ui"
-
-local game = game()
+import "CoreLibs/graphics"
 
 playdate.display.setRefreshRate(30)
 
 local gfx <const> = playdate.graphics
-local font = gfx.font.new('fnt/Mini Sans 2X')
+
 
 local function loadGame()
   math.randomseed(playdate.getSecondsSinceEpoch()) -- seed for math.random
-  gfx.setFont(font)
+  game.load()
+end
+
+local function draw()
+  gfx.clear()
+  gfx.setBackgroundColor(gfx.kColorBlack)
+  gfx.setColor(gfx.kColorWhite)
+  gfx.setImageDrawMode(playdate.graphics.kDrawModeFillWhite)
+  game.draw()
 end
 
 loadGame()
 
-function playdate.BButtonDown()
-	game:fireShipLaser()
-end
-
 function playdate.update()
+  playdate.timer.updateTimers()
   playdate.frameTimer.updateTimers()
-  game:update()
+  -- if ((not game.ship.dead) and (not game.paused)) then
   
-
-  gfx.clear()
+  game:update()
+  draw()
   gfx.sprite.update()
-  game:draw()
+  -- end
 end
