@@ -65,6 +65,8 @@ local timeToUpdateEndValue <const> = timeToUpdateDuration * 2
 
 local laserFireDelay <const> = 400
 
+local finished = false
+
 local function createSprite(initialX, initialY, image, opts)
   local sprite = gfx.sprite.new(image)
   sprite.dead = false
@@ -122,7 +124,9 @@ local function createLaser(x, y, direction)
   local laser = createSprite(x, y, spriteSheet:getImage(12), {setInverted = true, id = "laser"})
   laser.direction = direction
   laser.update = function()
-    laser:moveTo(x, laser.y + laserSpeed * direction)
+    if (not game.paused) then
+      laser:moveTo(x, laser.y + laserSpeed * direction)
+    end
   end
 
   function laser.destory()
@@ -317,9 +321,8 @@ local function handleCollisions(game)
             ship.dead = true
             ship:setImage(spriteSheet:getImage(13))
             game.paused = true
-            pd.timer.performAfterDelay(1000, function()
-              ship:remove()
-              game.paused = false
+            pd.timer.new(3000, function ()
+              finished = true
             end)
           else
             ship.hits = ship.hits + 1
@@ -413,20 +416,51 @@ function game:fireShipLaser()
   self.ship.fireLaser()
 end
 
-function pd.BButtonDown()
-	game:fireShipLaser()
-end
-
 function L.update()
   game:update()
 end
 
+local readyToFireDelay <const> = 400
+local readyToFire = true
+local inputHandlers = {
+  BButtonUp = function()
+      if (readyToFire) then
+        game:fireShipLaser()
+        readyToFire = false
+        pd.timer.new(readyToFireDelay, function ()
+          readyToFire = true
+        end)
+      end
+  end
+}
+
 function L.load()
   game:init()
+  pd.inputHandlers.push(inputHandlers)
+end
+
+function L.exit()
+  framesRemaining = initialUpdateFrames
+  updateVelocity = 0
+  finished = false
+
+  for _,v in ipairs(game.invaders) do
+    v:remove()
+  end
+
+  for _,v in ipairs(game.lasers) do
+    v:remove()
+  end
+
+  game.ship:remove()
+
+  game.fireTimer:remove()
+
+  game.speedTimer:remove()
 end
 
 function L.finished()
-  return false
+  return finished
 end
 
 function L.draw()

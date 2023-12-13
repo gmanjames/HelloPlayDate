@@ -1,13 +1,17 @@
 import "startscreen"
 import "level"
+import "endscreen"
 
 print("level: ", level)
 
 local G = {}
 game = G
 
+startscreen.nextScene = level
+level.nextScene = endscreen
+endscreen.nextScene = startscreen
+
 local activeScene = startscreen
-activeScene.nextScene = level
 
 function G.load()
   activeScene.load()
@@ -17,7 +21,8 @@ function G.update()
   if (
     activeScene.finished()
   ) then
-    activeScene = level
+    activeScene.exit()
+    activeScene = activeScene.nextScene
     activeScene.load()
   end
   activeScene.update()
