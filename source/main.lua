@@ -27,7 +27,7 @@ function playdate.update()
   playdate.frameTimer.updateTimers()
   -- if ((not game.ship.dead) and (not game.paused)) then
   
-  game:update()
+  game.update()
   draw()
   gfx.sprite.update()
   -- end

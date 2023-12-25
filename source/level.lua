@@ -99,6 +99,7 @@ function game:init()
   self.paused = false
   self:createInvaders()
   self:createShip()
+  self:createBarriers()
 
   -- could always decrease end value to drag out exponential increase
   self.speedTimer = pd.timer.new(timeToUpdateDuration, 1, timeToUpdateEndValue, pd.easingFunctions.inExpo)
@@ -116,8 +117,61 @@ function game:init()
   self.fireTimer.repeats = true
 end
 
-function game:loadStartScreen()
+function game:createBarriers()
+  self.barriers = {}
+  local barrierImg1 = spriteSheet:getImage(15)
+  local barrierImg2 = spriteSheet:getImage(16)
+  barrierImg1:setInverted(true)
+  barrierImg2:setInverted(true)
 
+  local width, height = barrierImg1:getSize()
+  local barrier1 = gfx.sprite.new(barrierImg1)
+  local barrier2 = gfx.sprite.new(barrierImg1)
+  local barrier3 = gfx.sprite.new(barrierImg1)
+
+  local box1 = pd.geometry.rect.new(64 - (width / 2), screenHeight - 48 - (height / 2), width, height)
+  local box2 = pd.geometry.rect.new(screenWidth - 64 - (width / 2), screenHeight - 48 - (height / 2), width, height)
+  local box3 = pd.geometry.rect.new(screenWidth / 2 - width / 2, screenHeight - 48 - (height / 2), width, height)
+
+  local col1 = pd.geometry.rect.new(0, 0, width, height)
+  local col2 = pd.geometry.rect.new(0, 0, width, height)
+  local col3 = pd.geometry.rect.new(0, 0, width, height)
+
+  barrier1:setBounds(box1)
+  barrier2:setBounds(box2)
+  barrier3:setBounds(box3)
+
+  barrier1:setCollideRect(col1)
+  barrier2:setCollideRect(col2)
+  barrier3:setCollideRect(col3)
+
+  barrier1:add()
+  barrier2:add()
+  barrier3:add()
+
+  local t = {}
+  table.insert(t, barrier1)
+  table.insert(t, barrier2)
+  table.insert(t, barrier3)
+  for _,b in pairs(t) do
+    b.i = 0
+    b.hits = 0
+    b.dead = false
+    b.images = {barrierImg1, barrierImg2}
+    b.id = "barrier"
+
+    function b.flipImage()
+      local i = b.i
+      b.i = (i + 1) % #b.images
+      b:setImage(b.images[b.i + 1])
+    end
+
+    function b.destroy()
+      b.dead = true
+      b:remove()
+    end
+  end
+  self.barriers = t
 end
 
 local function createLaser(x, y, direction)
@@ -328,7 +382,37 @@ local function handleCollisions(game)
             ship.hits = ship.hits + 1
           end
         end
-        
+
+      elseif (
+        (sprite1.id == "laser"
+          and sprite2.id == "barrier")
+        or
+        (sprite2.id == "laser"
+          and sprite1.id == "barrier")
+      ) then
+
+        local laser, barrier
+        if (sprite1.id == "laser") then
+          laser, barrier = sprite1, sprite2
+        else
+          laser, barrier = sprite2, sprite1
+        end
+
+        if (laser.direction == 1) then
+          laser.dead = true
+          laser:remove()
+
+          if (barrier.hits == 0) then
+            barrier.hits = barrier.hits + 1
+            barrier.flipImage()
+          else
+            barrier.destroy()
+          end
+        else
+          laser.dead = true
+          laser:remove()
+        end
+
       else
         -- print("other collision")
       end
@@ -424,13 +508,13 @@ local readyToFireDelay <const> = 400
 local readyToFire = true
 local inputHandlers = {
   BButtonUp = function()
-      if (readyToFire) then
-        game:fireShipLaser()
-        readyToFire = false
-        pd.timer.new(readyToFireDelay, function ()
-          readyToFire = true
-        end)
-      end
+    if (readyToFire) then
+      game:fireShipLaser()
+      readyToFire = false
+      pd.timer.new(readyToFireDelay, function ()
+        readyToFire = true
+      end)
+    end
   end
 }
 
@@ -449,6 +533,10 @@ function L.exit()
   end
 
   for _,v in ipairs(game.lasers) do
+    v:remove()
+  end
+
+  for _,v in ipairs(game.barriers) do
     v:remove()
   end
 
