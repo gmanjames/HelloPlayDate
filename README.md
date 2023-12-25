@@ -4,4 +4,4 @@ Space Invaders for the PlayDate system!
 
 ## Progress
 
-https://github.com/gmanjames/HelloPlayDate/assets/3821391/1aafdc97-e47e-4fa9-b6b6-7f0106ede876
+https://github.com/gmanjames/HelloPlayDate/assets/3821391/47d7abe8-2d8d-46d1-9db4-1efa2e26724e
